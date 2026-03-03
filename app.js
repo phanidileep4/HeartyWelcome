@@ -48,6 +48,12 @@ const elements = {
   rsvpStatusMessage: document.getElementById("rsvp-status-message"),
 };
 
+const authFields = {
+  modeLabel: elements.authMode.closest("label"),
+  emailLabel: elements.authEmail.closest("label"),
+  passwordLabel: elements.authPassword.closest("label"),
+};
+
 const state = {
   events: [],
   rsvps: [],
@@ -154,7 +160,9 @@ function createEventLink(eventId, inviteToken) {
 function renderAuthState() {
   elements.authStatus.textContent = state.user ? `Signed in as ${state.user.email}` : "Not signed in.";
   const isSignedIn = Boolean(state.user);
-  elements.authMode.classList.toggle("hidden", isSignedIn);
+  authFields.modeLabel.classList.toggle("hidden", isSignedIn);
+  authFields.emailLabel.classList.toggle("hidden", isSignedIn);
+  authFields.passwordLabel.classList.toggle("hidden", isSignedIn);
   elements.authSubmitBtn.classList.toggle("hidden", isSignedIn);
   elements.signoutBtn.classList.toggle("hidden", !isSignedIn);
   elements.authMode.disabled = isSignedIn;
