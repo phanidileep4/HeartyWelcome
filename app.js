@@ -91,7 +91,16 @@ async function apiRequest(method, path, { token, body, headers = {}, preferRetur
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Supabase ${res.status}: ${text}`);
+    let message = `Request failed (${res.status})`;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed?.message) message = parsed.message;
+      else if (parsed?.error_description) message = parsed.error_description;
+      else if (parsed?.error) message = parsed.error;
+    } catch {
+      if (text) message = text;
+    }
+    throw new Error(message);
   }
 
   if (res.status === 204) return null;
@@ -140,6 +149,12 @@ function createEventLink(eventId, inviteToken) {
 
 function renderAuthState() {
   elements.authStatus.textContent = state.user ? `Signed in as ${state.user.email}` : "Not signed in.";
+  const isSignedIn = Boolean(state.user);
+  elements.signupBtn.classList.toggle("hidden", isSignedIn);
+  elements.signinBtn.classList.toggle("hidden", isSignedIn);
+  elements.signoutBtn.classList.toggle("hidden", !isSignedIn);
+  elements.authEmail.disabled = isSignedIn;
+  elements.authPassword.disabled = isSignedIn;
   const showHostUi = Boolean(state.user);
   elements.eventPanel.classList.toggle("hidden", !showHostUi);
   elements.managePanel.classList.toggle("hidden", !showHostUi);
