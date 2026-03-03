@@ -21,6 +21,13 @@
         <h2>Host account</h2>
         <form id="auth-form" class="grid-form">
           <label>
+            Auth type
+            <select id="auth-mode">
+              <option value="signin">Sign in</option>
+              <option value="signup">Sign up</option>
+            </select>
+          </label>
+          <label>
             Email
             <input id="auth-email" type="email" placeholder="you@example.com" />
           </label>
@@ -29,8 +36,7 @@
             <input id="auth-password" type="password" placeholder="At least 8 characters" />
           </label>
           <div class="actions span-2">
-            <button id="signup-btn" type="button">Sign up</button>
-            <button id="signin-btn" type="button">Sign in</button>
+            <button id="auth-submit-btn" type="button">Continue</button>
             <button id="signout-btn" type="button" class="ghost">Sign out</button>
           </div>
           <p id="auth-status" class="status span-2">Not signed in.</p>

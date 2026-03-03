@@ -13,10 +13,10 @@ const elements = {
   eventPanel: document.getElementById("event-panel"),
   managePanel: document.getElementById("manage-panel"),
   dashboardPanel: document.getElementById("dashboard-panel"),
+  authMode: document.getElementById("auth-mode"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
-  signupBtn: document.getElementById("signup-btn"),
-  signinBtn: document.getElementById("signin-btn"),
+  authSubmitBtn: document.getElementById("auth-submit-btn"),
   signoutBtn: document.getElementById("signout-btn"),
   authStatus: document.getElementById("auth-status"),
   createForm: document.getElementById("create-form"),
@@ -154,19 +154,19 @@ function createEventLink(eventId, inviteToken) {
 function renderAuthState() {
   elements.authStatus.textContent = state.user ? `Signed in as ${state.user.email}` : "Not signed in.";
   const isSignedIn = Boolean(state.user);
-  elements.signupBtn.classList.toggle("hidden", isSignedIn);
-  elements.signinBtn.classList.toggle("hidden", isSignedIn);
+  elements.authMode.classList.toggle("hidden", isSignedIn);
+  elements.authSubmitBtn.classList.toggle("hidden", isSignedIn);
   elements.signoutBtn.classList.toggle("hidden", !isSignedIn);
+  elements.authMode.disabled = isSignedIn;
   elements.authEmail.disabled = isSignedIn;
   elements.authPassword.disabled = isSignedIn;
   const inCooldown = Date.now() < state.authCooldownUntil;
   if (!isSignedIn && inCooldown) {
-    elements.signupBtn.disabled = true;
-    elements.signinBtn.disabled = true;
+    elements.authSubmitBtn.disabled = true;
     elements.authStatus.textContent = "Please wait a minute before trying auth again.";
   } else {
-    elements.signupBtn.disabled = false;
-    elements.signinBtn.disabled = false;
+    elements.authSubmitBtn.disabled = false;
+    elements.authSubmitBtn.textContent = elements.authMode.value === "signup" ? "Create account" : "Sign in";
   }
   const showHostUi = Boolean(state.user);
   elements.eventPanel.classList.toggle("hidden", !showHostUi);
@@ -390,7 +390,8 @@ async function handleSignUp() {
   }
   const response = await apiRequest("POST", "/auth/v1/signup", { body: { email, password } });
   if (!response.access_token) {
-    throw new Error("Signup completed but no session returned. Disable email confirmation or verify email first.");
+    elements.authStatus.textContent = "Sign-up successful. Check your email, verify your account, then sign in.";
+    return;
   }
   saveSession(response);
   await fetchCurrentUser();
@@ -438,7 +439,7 @@ async function handleCreateEvent(event) {
   await refreshEventsAndDashboard();
   state.selectedEventId = created.event.id;
   elements.eventSelect.value = created.event.id;
-  elements.manageStatus.textContent = `Event created. Share: ${createEventLink(created.event.id, created.inviteToken)}`;
+  elements.manageStatus.textContent = "Event created. Use 'Copy event link' to share.";
   elements.createForm.reset();
   setDefaultDateTime();
 }
@@ -516,8 +517,15 @@ async function handleRsvpSubmit(event) {
 }
 
 function wireEvents() {
-  elements.signupBtn.addEventListener("click", () => handleSignUp().catch(handleAuthError));
-  elements.signinBtn.addEventListener("click", () => handleSignIn().catch(handleAuthError));
+  elements.authMode.addEventListener("change", () => renderAuthState());
+  elements.authSubmitBtn.addEventListener("click", () => {
+    const mode = elements.authMode.value;
+    if (mode === "signup") {
+      handleSignUp().catch(handleAuthError);
+      return;
+    }
+    handleSignIn().catch(handleAuthError);
+  });
   elements.signoutBtn.addEventListener("click", () => handleSignOut().catch(handleAuthError));
   elements.createForm.addEventListener("submit", (event) => handleCreateEvent(event).catch((e) => (elements.manageStatus.textContent = e.message)));
   elements.copyEventLinkBtn.addEventListener("click", () => handleCopyLink().catch((e) => (elements.manageStatus.textContent = e.message)));

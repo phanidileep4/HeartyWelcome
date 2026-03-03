@@ -145,6 +145,8 @@ button.ghost {
 .status {
   color: var(--muted);
   margin: 10px 0 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .stats {
