@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hearty Welcome</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <p class="eyebrow">Simple event invites</p>
+        <h1>Hearty Welcome</h1>
+        <p class="subhead">
+          Create events, share invite links, and track RSVPs for free.
+        </p>
+        <p class="status" id="data-mode">Data mode: Local browser storage</p>
+      </header>
+
+      <section class="panel" id="create-panel">
+        <h2>Host account</h2>
+        <form id="auth-form" class="grid-form">
+          <label>
+            Email
+            <input id="auth-email" type="email" placeholder="you@example.com" />
+          </label>
+          <label>
+            Password
+            <input id="auth-password" type="password" placeholder="At least 8 characters" />
+          </label>
+          <div class="actions span-2">
+            <button id="signup-btn" type="button">Sign up</button>
+            <button id="signin-btn" type="button">Sign in</button>
+            <button id="signout-btn" type="button" class="ghost">Sign out</button>
+          </div>
+          <p id="auth-status" class="status span-2">Not signed in.</p>
+        </form>
+      </section>
+
+      <section class="panel" id="event-panel">
+        <h2>Create event</h2>
+        <form id="create-form" class="grid-form">
+          <label>
+            Event title
+            <input id="event-title" type="text" required placeholder="Birthday Dinner" />
+          </label>
+          <label>
+            Host name
+            <input id="host-name" type="text" required placeholder="Alex" />
+          </label>
+          <label>
+            Date and time
+            <input id="event-datetime" type="datetime-local" required />
+          </label>
+          <label>
+            Location
+            <input id="event-location" type="text" required placeholder="123 Main St, Austin, TX" />
+          </label>
+          <label class="span-2">
+            Details
+            <textarea id="event-details" rows="3" placeholder="Dress code, parking, etc."></textarea>
+          </label>
+          <label>
+            RSVP deadline
+            <input id="event-deadline" type="date" />
+          </label>
+          <label>
+            Private passcode (optional)
+            <input id="event-passcode" type="text" placeholder="Only invited guests know this" />
+          </label>
+          <button type="submit">Create event</button>
+        </form>
+      </section>
+
+      <section class="panel" id="manage-panel">
+        <h2>Host tools</h2>
+        <div class="tools-row">
+          <label class="grow">
+            Select event
+            <select id="event-select"></select>
+          </label>
+          <button id="copy-event-link" type="button">Copy event link</button>
+          <button id="export-csv" type="button" class="ghost">Export RSVPs CSV</button>
+        </div>
+        <p id="manage-status" class="status">Create your first event to get started.</p>
+
+        <div class="panel muted">
+          <h3>Guest links</h3>
+          <label>
+            Guest names (one per line)
+            <textarea id="guest-list-input" rows="5" placeholder="Taylor&#10;Jordan&#10;Sam"></textarea>
+          </label>
+          <button id="generate-guest-links" type="button">Generate links</button>
+          <div id="guest-links-output" class="link-list"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="dashboard-panel">
+        <h2>RSVP dashboard</h2>
+        <div class="stats" id="stats"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Guests</th>
+                <th>Note</th>
+                <th>Responded</th>
+              </tr>
+            </thead>
+            <tbody id="rsvp-rows">
+              <tr>
+                <td colspan="6">No RSVPs yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel hidden" id="invite-panel">
+        <h2 id="invite-title">You’re invited</h2>
+        <p id="invite-meta"></p>
+        <p id="invite-details"></p>
+        <form id="rsvp-form" class="grid-form">
+          <label>
+            Your name
+            <input id="rsvp-name" type="text" required />
+          </label>
+          <label>
+            Email (optional)
+            <input id="rsvp-email" type="email" />
+          </label>
+          <label>
+            RSVP
+            <select id="rsvp-status" required>
+              <option value="yes">Yes</option>
+              <option value="maybe">Maybe</option>
+              <option value="no">No</option>
+            </select>
+          </label>
+          <label>
+            Total attendees (including you)
+            <input id="rsvp-count" type="number" min="1" max="20" value="1" required />
+          </label>
+          <label class="span-2">
+            Note (optional)
+            <textarea id="rsvp-note" rows="3" placeholder="Dietary restrictions, arrival time, etc."></textarea>
+          </label>
+          <label id="passcode-field" class="hidden">
+            Event passcode
+            <input id="rsvp-passcode" type="text" />
+          </label>
+          <button type="submit">Submit RSVP</button>
+        </form>
+        <p id="rsvp-status-message" class="status"></p>
+      </section>
+    </main>
+
+    <script src="supabase-config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
