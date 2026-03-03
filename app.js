@@ -29,9 +29,6 @@ const elements = {
   manageStatus: document.getElementById("manage-status"),
   stats: document.getElementById("stats"),
   rsvpRows: document.getElementById("rsvp-rows"),
-  guestListInput: document.getElementById("guest-list-input"),
-  generateGuestLinksBtn: document.getElementById("generate-guest-links"),
-  guestLinksOutput: document.getElementById("guest-links-output"),
   invitePanel: document.getElementById("invite-panel"),
   inviteTitle: document.getElementById("invite-title"),
   inviteMeta: document.getElementById("invite-meta"),
@@ -129,12 +126,11 @@ function setDefaultDateTime() {
   ).padStart(2, "0")}T${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-function createEventLink(eventId, inviteToken, guestName = "") {
+function createEventLink(eventId, inviteToken) {
   const url = new URL(window.location.href);
   url.search = "";
   url.searchParams.set("event", eventId);
   url.searchParams.set("t", inviteToken);
-  if (guestName) url.searchParams.set("guest", guestName);
   return url.toString();
 }
 
@@ -269,10 +265,10 @@ async function getPrimaryToken(eventId) {
   return rows[0]?.token || null;
 }
 
-async function createInviteToken(eventId, guestName, isPrimary = false) {
+async function createInviteToken(eventId, isPrimary = false) {
   const rows = await apiRequest("POST", "/rest/v1/invite_tokens?select=token", {
     token: requireAccessToken(),
-    body: { event_id: eventId, guest_name: guestName || null, is_primary: isPrimary, is_active: true },
+    body: { event_id: eventId, guest_name: null, is_primary: isPrimary, is_active: true },
     preferReturn: true,
   });
   return rows[0].token;
@@ -402,31 +398,10 @@ async function handleCreateEvent(event) {
 async function handleCopyLink() {
   if (!state.selectedEventId) return;
   let token = await getPrimaryToken(state.selectedEventId);
-  if (!token) token = await createInviteToken(state.selectedEventId, null, true);
+  if (!token) token = await createInviteToken(state.selectedEventId, true);
   const link = createEventLink(state.selectedEventId, token);
   await navigator.clipboard.writeText(link);
   elements.manageStatus.textContent = "Secure invite link copied.";
-}
-
-async function handleGenerateGuestLinks() {
-  if (!state.selectedEventId) return;
-  const names = elements.guestListInput.value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-  if (!names.length) {
-    elements.guestLinksOutput.innerHTML = '<p class="status">Add at least one name.</p>';
-    return;
-  }
-  elements.guestLinksOutput.innerHTML = "<p class='status'>Generating secure links...</p>";
-  const links = [];
-  for (const name of names) {
-    const token = await createInviteToken(state.selectedEventId, name, false);
-    links.push({ name, link: createEventLink(state.selectedEventId, token, name) });
-  }
-  elements.guestLinksOutput.innerHTML = links
-    .map((item) => `<div class="link-item"><strong>${escapeHtml(item.name)}</strong><a href="${item.link}" target="_blank" rel="noreferrer">${item.link}</a></div>`)
-    .join("");
 }
 
 function downloadCsv() {
@@ -443,7 +418,7 @@ function downloadCsv() {
   link.click();
 }
 
-async function handleInvitePage(eventId, inviteToken, guestName) {
+async function handleInvitePage(eventId, inviteToken) {
   elements.invitePanel.classList.remove("hidden");
   if (!inviteToken) {
     elements.inviteTitle.textContent = "Invite token missing";
@@ -463,7 +438,6 @@ async function handleInvitePage(eventId, inviteToken, guestName) {
   elements.inviteMeta.textContent = `${formatDateTime(event.dateTime)} • ${event.location} • Hosted by ${event.host}`;
   elements.inviteDetails.textContent = event.details || "No extra details provided.";
   elements.passcodeField.classList.toggle("hidden", !event.passcode);
-  elements.rsvpName.value = guestName || "";
   elements.rsvpForm.classList.remove("hidden");
 }
 
@@ -499,9 +473,6 @@ function wireEvents() {
   elements.signoutBtn.addEventListener("click", () => handleSignOut().catch((e) => (elements.authStatus.textContent = e.message)));
   elements.createForm.addEventListener("submit", (event) => handleCreateEvent(event).catch((e) => (elements.manageStatus.textContent = e.message)));
   elements.copyEventLinkBtn.addEventListener("click", () => handleCopyLink().catch((e) => (elements.manageStatus.textContent = e.message)));
-  elements.generateGuestLinksBtn.addEventListener("click", () =>
-    handleGenerateGuestLinks().catch((e) => (elements.manageStatus.textContent = e.message))
-  );
   elements.exportCsvBtn.addEventListener("click", downloadCsv);
   elements.eventSelect.addEventListener("change", () => {
     state.selectedEventId = elements.eventSelect.value;
@@ -525,9 +496,8 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   const eventId = params.get("event");
   const inviteToken = params.get("t") || "";
-  const guestName = params.get("guest") || "";
   if (eventId) {
-    await handleInvitePage(eventId, inviteToken, guestName);
+    await handleInvitePage(eventId, inviteToken);
   }
 }
 

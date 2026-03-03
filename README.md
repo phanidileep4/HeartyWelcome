@@ -7,6 +7,7 @@ Hearty Welcome is a low-cost, scalable event invite + RSVP app built for cloud d
 - Cloud-only runtime (no local storage fallback)
 - Host auth (email/password)
 - Secure invite-token guest access
+- One share link per event (same link for all guests)
 - RLS-protected multi-tenant data model
 - Atomic writes for hot paths via SQL RPC
 
