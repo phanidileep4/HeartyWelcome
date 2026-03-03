@@ -9,6 +9,10 @@ if (!cfg.url || !cfg.anonKey) {
 
 const elements = {
   dataMode: document.getElementById("data-mode"),
+  createPanel: document.getElementById("create-panel"),
+  eventPanel: document.getElementById("event-panel"),
+  managePanel: document.getElementById("manage-panel"),
+  dashboardPanel: document.getElementById("dashboard-panel"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
   signupBtn: document.getElementById("signup-btn"),
@@ -55,7 +59,7 @@ const state = {
 
 function loadSession() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.auth) || "null");
+    return JSON.parse(sessionStorage.getItem(STORAGE_KEYS.auth) || "null");
   } catch {
     return null;
   }
@@ -64,9 +68,9 @@ function loadSession() {
 function saveSession(next) {
   state.session = next || null;
   if (state.session) {
-    localStorage.setItem(STORAGE_KEYS.auth, JSON.stringify(state.session));
+    sessionStorage.setItem(STORAGE_KEYS.auth, JSON.stringify(state.session));
   } else {
-    localStorage.removeItem(STORAGE_KEYS.auth);
+    sessionStorage.removeItem(STORAGE_KEYS.auth);
   }
 }
 
@@ -136,6 +140,10 @@ function createEventLink(eventId, inviteToken) {
 
 function renderAuthState() {
   elements.authStatus.textContent = state.user ? `Signed in as ${state.user.email}` : "Not signed in.";
+  const showHostUi = Boolean(state.user);
+  elements.eventPanel.classList.toggle("hidden", !showHostUi);
+  elements.managePanel.classList.toggle("hidden", !showHostUi);
+  elements.dashboardPanel.classList.toggle("hidden", !showHostUi);
 }
 
 function populateEventSelect() {
