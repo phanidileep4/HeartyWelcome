@@ -55,6 +55,7 @@ const state = {
   inviteMode: null,
   session: loadSession(),
   user: null,
+  authCooldownUntil: 0,
 };
 
 function loadSession() {
@@ -99,6 +100,9 @@ async function apiRequest(method, path, { token, body, headers = {}, preferRetur
       else if (parsed?.error) message = parsed.error;
     } catch {
       if (text) message = text;
+    }
+    if (path.startsWith("/auth/v1") && (res.status === 429 || res.status === 430)) {
+      message = "Too many auth attempts. Please wait about 60 seconds and try again.";
     }
     throw new Error(message);
   }
@@ -155,10 +159,31 @@ function renderAuthState() {
   elements.signoutBtn.classList.toggle("hidden", !isSignedIn);
   elements.authEmail.disabled = isSignedIn;
   elements.authPassword.disabled = isSignedIn;
+  const inCooldown = Date.now() < state.authCooldownUntil;
+  if (!isSignedIn && inCooldown) {
+    elements.signupBtn.disabled = true;
+    elements.signinBtn.disabled = true;
+    elements.authStatus.textContent = "Please wait a minute before trying auth again.";
+  } else {
+    elements.signupBtn.disabled = false;
+    elements.signinBtn.disabled = false;
+  }
   const showHostUi = Boolean(state.user);
   elements.eventPanel.classList.toggle("hidden", !showHostUi);
   elements.managePanel.classList.toggle("hidden", !showHostUi);
   elements.dashboardPanel.classList.toggle("hidden", !showHostUi);
+}
+
+function handleAuthError(error) {
+  const message = error?.message || "Authentication failed.";
+  if (message.toLowerCase().includes("too many auth attempts") || message.includes("429") || message.includes("430")) {
+    state.authCooldownUntil = Date.now() + 60_000;
+    renderAuthState();
+    setTimeout(() => {
+      if (Date.now() >= state.authCooldownUntil) renderAuthState();
+    }, 61_000);
+  }
+  elements.authStatus.textContent = message;
 }
 
 function populateEventSelect() {
@@ -491,9 +516,9 @@ async function handleRsvpSubmit(event) {
 }
 
 function wireEvents() {
-  elements.signupBtn.addEventListener("click", () => handleSignUp().catch((e) => (elements.authStatus.textContent = e.message)));
-  elements.signinBtn.addEventListener("click", () => handleSignIn().catch((e) => (elements.authStatus.textContent = e.message)));
-  elements.signoutBtn.addEventListener("click", () => handleSignOut().catch((e) => (elements.authStatus.textContent = e.message)));
+  elements.signupBtn.addEventListener("click", () => handleSignUp().catch(handleAuthError));
+  elements.signinBtn.addEventListener("click", () => handleSignIn().catch(handleAuthError));
+  elements.signoutBtn.addEventListener("click", () => handleSignOut().catch(handleAuthError));
   elements.createForm.addEventListener("submit", (event) => handleCreateEvent(event).catch((e) => (elements.manageStatus.textContent = e.message)));
   elements.copyEventLinkBtn.addEventListener("click", () => handleCopyLink().catch((e) => (elements.manageStatus.textContent = e.message)));
   elements.exportCsvBtn.addEventListener("click", downloadCsv);
